@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ТЗ-Чекер | Кабинет</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #13151c;
+    --surface2: #1a1d26;
+    --border: rgba(255,255,255,0.07);
+    --border-active: rgba(99,179,237,0.4);
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --accent: #63b3ed;
+    --accent-dim: rgba(99,179,237,0.12);
+    --success: #68d391;
+    --success-dim: rgba(104,211,145,0.12);
+    --danger: #fc8181;
+    --danger-dim: rgba(252,129,129,0.12);
+    --warn: #f6e05e;
+    --warn-dim: rgba(246,224,94,0.1);
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    height: 52px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem;
+    gap: 1.5rem;
+    flex-shrink: 0;
+    position: sticky; top: 0; z-index: 50;
+  }
+
+  .topbar-logo {
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  .topbar-sep { width: 1px; height: 20px; background: var(--border); }
+
+  .topbar-tabs {
+    display: flex;
+    gap: 0.25rem;
+    flex: 1;
+  }
+
+  .tab {
+    padding: 0.35rem 0.9rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+    background: transparent;
+  }
+  .tab:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+  .tab.active { color: var(--accent); background: var(--accent-dim); border-color: var(--border-active); }
+
+  .topbar-right { display: flex; align-items: center; gap: 0.75rem; margin-left: auto; }
+
+  .user-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 0.3rem 0.8rem 0.3rem 0.4rem;
+    border-radius: 2rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .avatar {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--success));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; font-weight: 700; color: var(--bg);
+  }
+
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--success);
+    animation: blink 2s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── LAYOUT ── */
+  .app-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr 320px;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 1rem 0;
+  }
+
+  .sidebar-section { padding: 0 1rem; margin-bottom: 0.25rem; }
+  .sidebar-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0.75rem 0.5rem 0.4rem;
+  }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.6rem;
+    border-radius: 5px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 0.83rem;
+    font-weight: 600;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+  }
+  .sidebar-item:hover { background: var(--surface2); color: var(--text); }
+  .sidebar-item.active { background: var(--accent-dim); color: var(--accent); border-color: rgba(99,179,237,0.15); }
+  .sidebar-item .icon { font-size: 0.9rem; flex-shrink: 0; }
+  .sidebar-item .count {
+    margin-left: auto;
+    background: var(--surface2);
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    color: var(--muted);
+  }
+  .sidebar-item.active .count { background: rgba(99,179,237,0.2); color: var(--accent); }
+
+  .sidebar-divider { height: 1px; background: var(--border); margin: 0.75rem 1rem; }
+
+  /* ── MAIN AREA ── */
+  .main {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .main-header {
+    padding: 1.25rem 1.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .main-header h1 {
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .main-header p { font-size: 0.8rem; color: var(--muted); margin-top: 0.1rem; }
+
+  .main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  /* ── TZ UPLOAD AREA ── */
+  .upload-zone {
+    border: 1.5px dashed var(--border-active);
+    background: var(--accent-dim);
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .upload-zone:hover { border-color: var(--accent); background: rgba(99,179,237,0.18); }
+  .upload-zone.has-content { border-style: solid; background: rgba(104,211,145,0.05); border-color: rgba(104,211,145,0.3); }
+
+  .upload-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+  .upload-zone h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.25rem; }
+  .upload-zone p { font-size: 0.78rem; color: var(--muted); }
+
+  .tz-badge {
+    position: absolute;
+    top: 0.75rem; right: 0.75rem;
+    background: var(--success-dim);
+    border: 1px solid rgba(104,211,145,0.3);
+    color: var(--success);
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 3px;
+  }
+
+  /* ── INPUT AREA ── */
+  .input-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .input-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tool-btn {
+    display: flex; align-items: center; gap: 0.4rem;
+    font-size: 0.75rem; font-weight: 600; color: var(--muted);
+    background: none; border: none; cursor: pointer;
+    padding: 0.3rem 0.6rem; border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .tool-btn:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+  .tool-btn.active { background: var(--accent-dim); color: var(--accent); }
+
+  .voice-btn {
+    margin-left: auto;
+    background: var(--danger-dim);
+    color: var(--danger);
+    border: 1px solid rgba(252,129,129,0.25);
+    padding: 0.3rem 0.8rem;
+  }
+  .voice-btn:hover { background: rgba(252,129,129,0.2); }
+  .voice-btn.recording { animation: pulse-red 1s ease-in-out infinite; }
+  @keyframes pulse-red { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+  textarea {
+    width: 100%;
+    min-height: 140px;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: vertical;
+    padding: 1rem;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 0.88rem;
+    line-height: 1.7;
+  }
+  textarea::placeholder { color: var(--muted); }
+
+  .input-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .char-count { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); }
+
+  .run-btn {
+    display: flex; align-items: center; gap: 0.5rem;
+    background: var(--accent);
+    color: var(--bg);
+    border: none; cursor: pointer;
+    padding: 0.55rem 1.4rem;
+    border-radius: 5px;
+    font-family: var(--sans);
+    font-size: 0.83rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    transition: all 0.15s;
+  }
+  .run-btn:hover { background: #90cdf4; transform: translateY(-1px); }
+  .run-btn:active { transform: translateY(0); }
+
+  /* ── RESULTS ── */
+  .results-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem 1rem;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .results-title { font-size: 0.83rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+  .score-pill {
+    background: var(--success-dim);
+    border: 1px solid rgba(104,211,145,0.3);
+    color: var(--success);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.7rem;
+    border-radius: 3px;
+  }
+
+  .criteria-list { padding: 0.5rem 0; }
+
+  .criterion {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    cursor: default;
+  }
+  .criterion:last-child { border-bottom: none; }
+  .criterion:hover { background: rgba(255,255,255,0.02); }
+
+  .criterion-status { flex-shrink: 0; width: 22px; height: 22px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; margin-top: 0.1rem; }
+  .criterion-status.pass { background: var(--success-dim); color: var(--success); }
+  .criterion-status.fail { background: var(--danger-dim); color: var(--danger); }
+  .criterion-status.warn { background: var(--warn-dim); color: var(--warn); }
+
+  .criterion-body { flex: 1; }
+  .criterion-name { font-size: 0.83rem; font-weight: 700; margin-bottom: 0.2rem; }
+  .criterion-note { font-size: 0.77rem; color: var(--muted); line-height: 1.5; }
+  .criterion-num { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); margin-left: auto; flex-shrink: 0; }
+
+  /* ── RIGHT PANEL ── */
+  .right-panel {
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.83rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .panel-body { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+
+  .history-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .history-item:hover { border-color: rgba(255,255,255,0.15); }
+
+  .history-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+  .history-time { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); }
+  .history-score { font-family: var(--mono); font-size: 0.7rem; font-weight: 700; }
+  .history-score.high { color: var(--success); }
+  .history-score.mid { color: var(--warn); }
+  .history-score.low { color: var(--danger); }
+  .history-excerpt { font-size: 0.77rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .mini-chart {
+    height: 40px;
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    margin-top: 0.5rem;
+  }
+  .bar {
+    flex: 1;
+    border-radius: 2px 2px 0 0;
+    transition: height 0.3s ease;
+  }
+  .bar.pass { background: var(--success); opacity: 0.6; }
+  .bar.fail { background: var(--danger); opacity: 0.6; }
+
+  /* ── STATS ROW ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .stat-box { text-align: center; }
+  .stat-box .num { font-family: var(--mono); font-size: 1.3rem; font-weight: 700; line-height: 1; }
+  .stat-box .lbl { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.2rem; }
+  .stat-box .num.green { color: var(--success); }
+  .stat-box .num.blue { color: var(--accent); }
+  .stat-box .num.red { color: var(--danger); }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">tz_checker</div>
+  <div class="topbar-sep"></div>
+  <div class="topbar-tabs">
+    <button class="tab active">Проверка</button>
+    <button class="tab">История</button>
+    <button class="tab">Мои ТЗ</button>
+    <button class="tab">Дашборд</button>
+  </div>
+  <div class="topbar-right">
+    <div class="status-dot" title="n8n connected"></div>
+    <div class="user-chip">
+      <div class="avatar">ЛВ</div>
+      @likagerm
+    </div>
+  </div>
+</div>
+
+<!-- APP LAYOUT -->
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Мои ТЗ</div>
+      <div class="sidebar-item active">
+        <span class="icon">📄</span> Основное ТЗ
+        <span class="count">12</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="icon">📄</span> ТЗ v2 (март)
+        <span class="count">8</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="icon">➕</span> Добавить ТЗ
+      </div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Блогеры</div>
+      <div class="sidebar-item">
+        <span class="icon">👤</span> @blogger_1
+        <span class="count">5</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="icon">👤</span> @fashion_girl
+        <span class="count">3</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="icon">👤</span> @techblog
+        <span class="count">2</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="icon">➕</span> Добавить
+      </div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Настройки</div>
+      <div class="sidebar-item">
+        <span class="icon">⚙️</span> Параметры
+      </div>
+      <div class="sidebar-item">
+        <span class="icon">🔗</span> n8n webhook
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="main-header">
+      <div>
+        <h1>Проверка поста</h1>
+        <p>Активное ТЗ: <strong>Основное ТЗ</strong> · 12 критериев</p>
+      </div>
+    </div>
+
+    <div class="main-content">
+
+      <!-- TZ ZONE -->
+      <div class="upload-zone has-content">
+        <div class="tz-badge">✓ ТЗ загружено</div>
+        <div class="upload-icon">📋</div>
+        <h3>Основное ТЗ активно</h3>
+        <p>12 критериев · обновлено 2 дня назад · нажмите, чтобы заменить</p>
+      </div>
+
+      <!-- INPUT -->
+      <div class="input-card">
+        <div class="input-toolbar">
+          <button class="tool-btn active">✏️ Текст</button>
+          <button class="tool-btn">📎 Файл</button>
+          <button class="tool-btn">🔗 Ссылка</button>
+          <button class="tool-btn voice-btn" id="voiceBtn" onclick="toggleVoice(this)">🎙️ Голос</button>
+        </div>
+        <textarea id="postInput" placeholder="Вставьте сюда текст поста блогера для проверки на соответствие ТЗ..." oninput="updateCount(this)"></textarea>
+        <div class="input-footer">
+          <span class="char-count" id="charCount">0 символов</span>
+          <button class="run-btn" onclick="runCheck()">
+            ⚡ Проверить
+          </button>
+        </div>
+      </div>
+
+      <!-- RESULTS -->
+      <div class="results-card" id="results">
+        <div class="results-header">
+          <div class="results-title">
+            📊 Результат проверки
+          </div>
+          <div class="score-pill" id="scoreDisplay">9 / 12</div>
+        </div>
+        <div class="criteria-list" id="criteriaList">
+
+          <div class="criterion">
+            <div class="criterion-status pass">✓</div>
+            <div class="criterion-body">
+              <div class="criterion-name">Решает прикладную задачу</div>
+              <div class="criterion-note">Чётко описана проблема и как продукт её решает. Контекст понятен.</div>
+            </div>
+            <div class="criterion-num">#1</div>
+          </div>
+
+          <div class="criterion">
+            <div class="criterion-status pass">✓</div>
+            <div class="criterion-body">
+              <div class="criterion-name">Вайб-кодинг</div>
+              <div class="criterion-note">Упомянут n8n-воркфлоу, нет ссылок на классическую разработку.</div>
+            </div>
+            <div class="criterion-num">#2</div>
+          </div>
+
+          <div class="criterion">
+            <div class="criterion-status pass">✓</div>
+            <div class="criterion-body">
+              <div class="criterion-name">Использование LLM</div>
+              <div class="criterion-note">Указан Claude API как языковая модель для анализа.</div>
+            </div>
+            <div class="criterion-num">#3</div>
+          </div>
+
+          <div class="criterion">
+            <div class="criterion-status pass">✓</div>
+            <div class="criterion-body">
+              <div class="criterion-name">Интеграция с TG-ботом</div>
+              <div class="criterion-note">Основной интерфейс — Telegram. Ссылка на бота упомянута.</div>
+            </div>
+            <div class="criterion-num">#4</div>
+          </div>
+
+          <div class="criterion">
+            <div class="criterion-status pass">✓</div>
+            <div class="criterion-body">
+              <div class="criterion-name">Лендинг</div>
+              <div class="criterion-note">GitHub Pages URL присутствует в посте.</div>
+            </div>
+            <div class="criterion-num">#5</div>
+          </div>
+
+          <div class="criterion">
+            <div class="criterion-status pass">✓</div>
+            <div class="criterion-body">
+              <div class="criterion-name">Веб-интерфейс (UI)</div>
+              <div class="criterion-note">Веб-приложение задеплоено на GitHub Pages.</div>
+            </div>
+            <div class="criterion-num">#6</div>
+          </div>
+
+          <div class="criterion">
+            <div class="criterion-status pass">✓</div>
+            <div class="criterion-body">
+              <div class="criterion-name">Авторизация</div>
+              <div class="criterion-note">Telegram Login Widget реализован и работает.</div>
+            </div>
+            <div class="criterion-num">#7</div>
+          </div>
+
+          <div class="criterion">
+            <div class="criterion-status pass">✓</div>
+            <div class="criterion-body">
+              <div class="criterion-name">RAG-ассистент</div>
+              <div class="criterion-note">Flowise с векторной базой подключён и задеплоен.</div>
+            </div>
+            <div class="criterion-num">#8</div>
+          </div>
+
+          <div class="criterion">
+            <div class="criterion-status pass">✓</div>
+            <div class="criterion-body">
+              <div class="criterion-name">База данных</div>
+              <div class="criterion-note">Supabase используется для хранения ТЗ и результатов.</div>
+            </div>
+            <div class="criterion-num">#9</div>
+          </div>
+
+          <div class="criterion">
+            <div class="criterion-status fail">✗</div>
+            <div class="criterion-body">
+              <div class="criterion-name">Голосовой ввод (STT)</div>
+              <div class="criterion-note">Функция упомянута, но ссылки на демо нет. Требует доработки.</div>
+            </div>
+            <div class="criterion-num">#10</div>
+          </div>
+
+          <div class="criterion">
+            <div class="criterion-status pass">✓</div>
+            <div class="criterion-body">
+              <div class="criterion-name">Дашборд статистики</div>
+              <div class="criterion-note">Ссылка на Grafana-дашборд присутствует.</div>
+            </div>
+            <div class="criterion-num">#11</div>
+          </div>
+
+          <div class="criterion">
+            <div class="criterion-status fail">✗</div>
+            <div class="criterion-body">
+              <div class="criterion-name">Аналитика воронки</div>
+              <div class="criterion-note">Не обнаружено ссылок на воронку (PostHog / Metabase).</div>
+            </div>
+            <div class="criterion-num">#12</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="right-panel">
+    <div class="panel-header">
+      История проверок
+      <span style="font-size:0.7rem;color:var(--muted);font-weight:500">7 сегодня</span>
+    </div>
+    <div class="panel-body">
+
+      <div class="history-item">
+        <div class="history-meta">
+          <span class="history-time">сегодня 14:32</span>
+          <span class="history-score high">11/12</span>
+        </div>
+        <div class="history-excerpt">@blogger_1 · Пост про запуск нового...</div>
+        <div class="mini-chart">
+          <div class="bar pass" style="height:38px"></div>
+          <div class="bar pass" style="height:32px"></div>
+          <div class="bar pass" style="height:35px"></div>
+          <div class="bar pass" style="height:40px"></div>
+          <div class="bar fail" style="height:10px"></div>
+          <div class="bar pass" style="height:30px"></div>
+          <div class="bar pass" style="height:36px"></div>
+        </div>
+      </div>
+
+      <div class="history-item">
+        <div class="history-meta">
+          <span class="history-time">сегодня 11:05</span>
+          <span class="history-score mid">7/12</span>
+        </div>
+        <div class="history-excerpt">@fashion_girl · Обзор продуктов...</div>
+        <div class="mini-chart">
+          <div class="bar pass" style="height:30px"></div>
+          <div class="bar fail" style="height:12px"></div>
+          <div class="bar pass" style="height:28px"></div>
+          <div class="bar fail" style="height:8px"></div>
+          <div class="bar pass" style="height:35px"></div>
+          <div class="bar fail" style="height:10px"></div>
+          <div class="bar pass" style="height:25px"></div>
+        </div>
+      </div>
+
+      <div class="history-item">
+        <div class="history-meta">
+          <span class="history-time">вчера 18:44</span>
+          <span class="history-score low">4/12</span>
+        </div>
+        <div class="history-excerpt">@techblog · Статья про технологии...</div>
+        <div class="mini-chart">
+          <div class="bar pass" style="height:28px"></div>
+          <div class="bar fail" style="height:8px"></div>
+          <div class="bar fail" style="height:6px"></div>
+          <div class="bar fail" style="height:5px"></div>
+          <div class="bar pass" style="height:30px"></div>
+          <div class="bar fail" style="height:7px"></div>
+          <div class="bar fail" style="height:9px"></div>
+        </div>
+      </div>
+
+      <div class="history-item">
+        <div class="history-meta">
+          <span class="history-time">вчера 10:20</span>
+          <span class="history-score high">12/12</span>
+        </div>
+        <div class="history-excerpt">@blogger_1 · Идеальный пост!...</div>
+      </div>
+
+    </div>
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="num green">73%</div>
+        <div class="lbl">Avg score</div>
+      </div>
+      <div class="stat-box">
+        <div class="num blue">24</div>
+        <div class="lbl">Проверок</div>
+      </div>
+      <div class="stat-box">
+        <div class="num red">3</div>
+        <div class="lbl">Отклонено</div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<script>
+function updateCount(el) {
+  document.getElementById('charCount').textContent = el.value.length + ' символов';
+}
+
+let recording = false;
+function toggleVoice(btn) {
+  recording = !recording;
+  btn.classList.toggle('recording', recording);
+  btn.textContent = recording ? '⏹ Стоп' : '🎙️ Голос';
+  if (recording) {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const rec = new SR();
+      rec.lang = 'ru-RU'; rec.continuous = false; rec.interimResults = false;
+      rec.onresult = e => {
+        document.getElementById('postInput').value += e.results[0][0].transcript + ' ';
+        updateCount(document.getElementById('postInput'));
+        recording = false; btn.classList.remove('recording'); btn.textContent = '🎙️ Голос';
+      };
+      rec.onerror = () => { recording = false; btn.classList.remove('recording'); btn.textContent = '🎙️ Голос'; };
+      rec.start();
+    }
+  }
+}
+
+function runCheck() {
+  const btn = document.querySelector('.run-btn');
+  const original = btn.innerHTML;
+  btn.innerHTML = '⏳ Анализ...';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.innerHTML = original;
+    btn.disabled = false;
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 1800);
+}
+</script>
+</body>
+</html>
